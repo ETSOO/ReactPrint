@@ -1,20 +1,20 @@
 import React from 'react';
-import ReactToPrint from '../src/index';
+import { useReactToPrint } from '../src/index';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { act } from 'react-dom/test-utils';
 
 const Example = (props: { onBeforeGetContent: () => void }) => {
     const { onBeforeGetContent } = props;
     const componentRef = React.useRef(null);
+    const handlePrint = useReactToPrint({
+        onBeforeGetContent,
+        content: () => componentRef.current
+    });
 
     return (
         <div>
-            <ReactToPrint
-                trigger={() => <button>Print this out!</button>}
-                onBeforeGetContent={onBeforeGetContent}
-                content={() => componentRef.current}
-            />
             <div ref={componentRef}>Hello, world!</div>
+            <button onClick={() => handlePrint([1280])} />
         </div>
     );
 };

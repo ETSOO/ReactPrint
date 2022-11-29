@@ -30,7 +30,7 @@ type Font = {
     source: string;
 };
 
-type PageSize = [number] | [number, number];
+type PageSize = [number] | [number | undefined, number];
 
 type PropertyFunction<T> = () => T;
 
@@ -196,17 +196,17 @@ export default class ReactToPrint extends React.Component<IReactToPrintProps> {
                 typeof onBeforeGetContentOutput.then === 'function'
             ) {
                 onBeforeGetContentOutput
-                    .then(this.handlePrint)
+                    .then(() => this.handlePrint(pageSize))
                     .catch((error: Error) => {
                         if (onPrintError) {
                             onPrintError('onBeforeGetContent', error);
                         }
                     });
             } else {
-                this.handlePrint();
+                this.handlePrint(pageSize);
             }
         } else {
-            this.handlePrint();
+            this.handlePrint(pageSize);
         }
     };
 
