@@ -30,6 +30,8 @@ type Font = {
     source: string;
 };
 
+type PageSize = [number] | [number, number];
+
 type PropertyFunction<T> = () => T;
 
 // NOTE: https://github.com/Microsoft/TypeScript/issues/23812
@@ -64,11 +66,7 @@ export interface IReactToPrintProps {
         errorLocation: 'onBeforeGetContent' | 'onBeforePrint' | 'print',
         error: Error
     ) => void;
-    pageSize?:
-        | ((
-              contentNode: Element | Text
-          ) => [number | undefined, number | undefined])
-        | [number | undefined, number | undefined];
+    pageSize?: ((contentNode: Element | Text) => PageSize) | PageSize;
     /** Override default print window styling */
     pageStyle?: string | PropertyFunction<string>;
     /** Override the default `window.print` method that is used for printing */
@@ -188,7 +186,7 @@ export default class ReactToPrint extends React.Component<IReactToPrintProps> {
         }
     };
 
-    public handleClick = () => {
+    public handleClick = (pageSize?: PageSize) => {
         const { onBeforeGetContent, onPrintError } = this.props;
 
         if (onBeforeGetContent) {
@@ -212,7 +210,7 @@ export default class ReactToPrint extends React.Component<IReactToPrintProps> {
         }
     };
 
-    public handlePrint = () => {
+    public handlePrint = (callSize?: PageSize) => {
         const {
             bodyClass,
             content,
@@ -255,9 +253,10 @@ export default class ReactToPrint extends React.Component<IReactToPrintProps> {
             width = isText ? clientWidth : contentNodes.clientWidth,
             height = clientHeight
         ] =
-            typeof pageSize === 'function'
+            callSize ??
+            (typeof pageSize === 'function'
                 ? pageSize(contentNodes)
-                : pageSize ?? [];
+                : pageSize ?? []);
 
         const printWindow = document.createElement('iframe');
         printWindow.width = `${width}px`;
@@ -712,7 +711,7 @@ export default class ReactToPrint extends React.Component<IReactToPrintProps> {
     }
 }
 
-type UseReactToPrintHookReturn = () => void;
+type UseReactToPrintHookReturn = (pageSize?: PageSize) => void;
 
 export const useReactToPrint = (
     props: IReactToPrintProps
@@ -737,5 +736,8 @@ export const useReactToPrint = (
         [props]
     );
 
-    return React.useCallback(() => reactToPrint.handleClick(), [reactToPrint]);
+    return React.useCallback(
+        (pageSize?: PageSize) => reactToPrint.handleClick(pageSize),
+        [reactToPrint]
+    );
 };
